@@ -1,92 +1,79 @@
-#include "holberton.h"
-#include <stdlib.h>
+#include <stdarg.h>
+#include "main.h"
 #include <stdio.h>
 
 /**
- * printIdentifiers - prints special characters
- * @next: character after the %
- * @arg: argument for the indentifier
- * Return: the number of characters printed
- * (excluding the null byte used to end output to strings)
- */
-
-int printIdentifiers(char next, va_list arg)
-{
-	int functsIndex;
-
-	identifierStruct functs[] = {
-		{"c", print_char},
-		{"s", print_str},
-		{"d", print_int},
-		{"i", print_int},
-		{"u", print_unsigned},
-		{"b", print_unsignedToBinary},
-		{"o", print_oct},
-		{"x", print_hex},
-		{"X", print_HEX},
-		{"S", print_STR},
-		{NULL, NULL}
-	};
-
-	for (functsIndex = 0; functs[functsIndex].indentifier != NULL; functsIndex++)
-	{
-		if (functs[functsIndex].indentifier[0] == next)
-			return (functs[functsIndex].printer(arg));
-	}
-	return (0);
-}
-
-/**
- * _printf - mimic printf from stdio
- * Description: produces output according to a format
- * write output to stdout, the standard output stream
- * @format: character string composed of zero or more directives
- *
- * Return: the number of characters printed
- * (excluding the null byte used to end output to strings)
- * return -1 for incomplete identifier error
+ * _printf - produces output according to a format.
+ * @format: a character string.
+ * Return: number of characters printed(
+ * excluding the null terminator)
  */
 
 int _printf(const char *format, ...)
 {
-	unsigned int i;
-	int identifierPrinted = 0, charPrinted = 0;
-	va_list arg;
+	int count;
+	int total = 0;
+	va_list args;
+	int flag = 0;
 
-	va_start(arg, format);
 	if (format == NULL)
-		return (-1);
-
-	for (i = 0; format[i] != '\0'; i++)
+		return (0);
+	va_start(args, format);
+	for (count = 0; *(format + count) != '\0'; count++)
 	{
-		if (format[i] != '%')
+		if (format[count] == '%')
 		{
-			_putchar(format[i]);
-			charPrinted++;
-			continue;
+			flag = 1;
 		}
-		if (format[i + 1] == '%')
+		else if (flag == 1)
 		{
-			_putchar('%');
-			charPrinted++;
-			i++;
-			continue;
+			flag = 0;
+			switch (format[count])
+			{
+				case 'c':
+					_putchar(va_arg(args, int));
+					total += 1;
+					break;
+				case 's':
+					total += _print_str(va_arg(args, char *));
+					break;
+				case '%':
+					_putchar('%');
+					total += 1;
+					break;
+				case 'd':
+					total += _print_int((long)(va_arg(args, int)));
+					break;
+				case 'i':
+					total += _print_int((long)(va_arg(args, int)));
+					break;
+				case 'b':
+					total += to_Binary(va_arg(args, int));
+					break;
+				case 'u':
+					total += _print_int(va_arg(args, unsigned int));
+					break;
+				case 'o':
+					total += to_Octal(va_arg(args, int));
+					break;
+				case 'x':
+					total += to_Hexa(va_arg(args, int));
+					break;
+				case 'X':
+					total += to_Hexa(va_arg(args, int));
+					break;
+				default:
+					_putchar('%');
+					_putchar(format[count]);
+					total += 2;
+			}
 		}
-		if (format[i + 1] == '\0')
-			return (-1);
-
-		identifierPrinted = printIdentifiers(format[i + 1], arg);
-		if (identifierPrinted == -1 || identifierPrinted != 0)
-			i++;
-		if (identifierPrinted > 0)
-			charPrinted += identifierPrinted;
-
-		if (identifierPrinted == 0)
+		else
 		{
-			_putchar('%');
-			charPrinted++;
+			_putchar(format[count]);
+			total += 1;
 		}
 	}
-	va_end(arg);
-	return (charPrinted);
+	va_end(args);
+	return (total);
 }
